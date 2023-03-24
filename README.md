@@ -9,6 +9,36 @@ We present a pretrained 3D backbone, named Swin3D, that first-time outperforms a
 
 ## Quick Start
 
+Install the package using
+`python setup.py install`
+
+Build models and load our pretrained weight, Then you can finetune your model in various task.
+
+    import torch
+    from Swin3D.models import Swin3DUNet
+    from easydict import EasyDict
+    args = EasyDict({
+        'in_channels': 6,
+        'num_layers': 5,
+        'depths': [2, 4, 9, 4, 4],
+        'channels': [48, 96, 192, 384, 384] ,
+        'num_heads': [6, 6, 12, 24, 24],
+        'window_sizes': [5, 7, 7, 7, 7],
+        'quant_sizes': [4, 4, 4, 4, 4],
+        'down_stride': 3,
+        'knn_down': True,
+        'stem_transformer': True,
+        'upsample': 'linear_attn',
+        'up_k': 3,
+        'drop_path_rate': 0.3,
+        'num_classes': 13,
+    })
+    model = Swin3DUNet(args.depths, args.channels, args.num_heads, \
+            args.window_sizes, args.quant_sizes, up_k=args.up_k, drop_path_rate=args.drop_path_rate, num_classes=args.num_classes, \
+            num_layers=args.num_layers, stem_transformer=args.stem_transformer, upsample=args.upsample, first_down_stride=args.down_stride,
+            knn_down=args.knn_down, in_channels=args.in_channels, cRSE='XYZ_RGB_NORM', fp16_mode=0)
+    model.load_pretrained_model(ckpt_path)
+
 ## Results and models
 ### ScanNet Segmentation
 
