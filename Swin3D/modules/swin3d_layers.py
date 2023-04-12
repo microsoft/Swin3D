@@ -6,7 +6,38 @@ import MinkowskiEngine as ME
 from MinkowskiEngine import SparseTensor
 from Swin3D.modules.mink_layers import assign_feats, SparseTensorLayerNorm, SparseTensorLinear
 from Swin3D.sparse_dl.attn.attn_coff import SelfAttnAIOFunction, PosEmb, TableDims, IndexMode, PrecisionMode
-from Swin3D.sparse_dl.pointops import pointops
+import Swin3D.sparse_dl.knn
+from Swin3D.sparse_dl.knn import KNN
+
+def query_knn_feature(K, src_xyz, query_xyz, src_feat, src_offset, query_offset, return_idx=False):
+    assert src_xyz.is_contiguous() and query_xyz.is_contiguous() and src_feat.is_contiguous()
+    if query_xyz is None:
+        query_xyz = src_xyz
+        query_offset = src_offset
+    
+    idx, _ = KNN.apply(K, src_xyz, query_xyz, src_offset, query_offset)
+
+    n, m, c = src_xyz.shape[0], query_xyz.shape[0], src_feat.shape[1]
+    grouped_feat = src_feat[idx.view(-1).long(), :].view(m, K, c)
+
+    if return_idx:
+        return grouped_feat, idx
+    else:
+        return grouped_feat
+
+def knn_linear_interpolation(src_xyz, query_xyz, src_feat, src_offset, query_offset, K=3):
+    N, C = query_xyz.shape[0], src_feat.shape[1]
+    assert src_xyz.is_contiguous() and query_xyz.is_contiguous() and src_feat.is_contiguous()
+    # (N, K)
+    idx, dist = KNN.apply(K, src_xyz, query_xyz, src_offset, query_offset)
+    weight = 1.0 / (dist + 1e-8)
+    norm = torch.sum(weight, dim=1, keepdim=True)
+    weight = weight / norm
+    query_feat = torch.zeros((N, C), dtype=src_feat.dtype, device=src_feat.device)
+    for i in range(K):
+        query_feat += src_feat[idx[:, i].long(), :] * weight[:, i].unsqueeze(-1)
+    return query_feat
+
 
 def sparse_self_attention(w_w_id: torch.Tensor, w_sizes: torch.Tensor, protocol: str = 'v1'):
     """
@@ -177,7 +208,7 @@ class GridKNNDownsample(nn.Module):
 
         xyz = coords_sp.F[:, 1:4].detach().contiguous()
         n_xyz = coords_sp_down.F[:, 1:4].detach().contiguous()
-        feats = pointops.queryandgroup(self.k, xyz, n_xyz, sp.F, None, offset, n_offset, use_xyz=False)  # (m, nsample, 3+c)
+        feats = query_knn_feature(self.k, xyz, n_xyz, sp.F, offset, n_offset)  # (m, nsample, 3+c)
         m, k, c = feats.shape
         feats = self.linear(self.norm(feats.view(m*k, c)).view(m, k, c)).transpose(1, 2).contiguous()
         feats = self.pool(feats).squeeze(-1)  # (m, c)
@@ -217,7 +248,7 @@ class Upsample(nn.Module):
         offset = get_offset(sp.C[:, 0])
         support_offset = get_offset(sp_up.C[:, 0])
 
-        feats = self.linear1(support_feats) + pointops.interpolation(xyz, support_xyz, self.linear2(feats), offset, support_offset, k=self.up_k)
+        feats = self.linear1(support_feats) + knn_linear_interpolation(xyz, support_xyz, self.linear2(feats), offset, support_offset, K=self.up_k)
         sp_up = assign_feats(sp_up, feats)
         if self.attn:
             sp_up, _, _ = self.block(sp_up, coords_sp_up)
