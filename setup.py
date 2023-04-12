@@ -20,14 +20,6 @@ setup(
             extra_compile_args={'cxx': ['-g'],
                                 'nvcc': ['-O2']}),
         CUDAExtension(
-            name='Swin3D.sparse_dl.pointops_cuda',
-            sources=[
-                'Swin3D/src/pointops/pointops_api.cpp',
-                'Swin3D/src/pointops/knnquery/knnquery_cuda.cpp',
-                'Swin3D/src/pointops/knnquery/knnquery_cuda_kernel.cu'],
-            extra_compile_args={'cxx': ['-g'],
-                                'nvcc': ['-O2']}),
-        CUDAExtension(
             name='Swin3D.sparse_dl.knn_cuda',
             sources=[
                 'Swin3D/src/knn/knn_api.cpp',
