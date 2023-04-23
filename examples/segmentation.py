@@ -28,7 +28,7 @@ args = EasyDict({
 model = Swin3DUNet(args.depths, args.channels, args.num_heads, \
         args.window_sizes, args.quant_sizes, up_k=args.up_k, drop_path_rate=args.drop_path_rate, num_classes=args.num_classes, \
         num_layers=args.num_layers, stem_transformer=args.stem_transformer, upsample=args.upsample, first_down_stride=args.down_stride,
-        knn_down=args.knn_down, in_channels=args.in_channels, cRSE='XYZ_RGB_NORM', fp16_mode=0)
+        knn_down=args.knn_down, in_channels=args.in_channels, cRSE='XYZ_RGB_NORM', fp16_mode=2)
 print(model)
 print('#Model parameters: {}'.format(sum([x.nelement() for x in model.parameters()])))
 model = model.cuda()
@@ -56,9 +56,20 @@ colors = feat[:, 0:3]
 normals = feat[:, 3:6]
 coords_sp = SparseTensor(features=torch.cat([coords, colors, normals], dim=1), coordinate_map_key=sp.coordinate_map_key, 
 coordinate_manager=sp.coordinate_manager)
-output = model(sp, coords_sp)
+
+use_amp = True
+scaler = torch.cuda.amp.GradScaler()
+with torch.cuda.amp.autocast(enabled=use_amp):
+    output = model(sp, coords_sp)
 loss = criterion(output, target)
-loss.backward()
-optimizer.step()
+optimizer.zero_grad()
+
+if use_amp:
+    scaler.scale(loss).backward()
+    scaler.step(optimizer)
+    scaler.update()
+else:
+    loss.backward()
+    optimizer.step()
 print("FINISHED!")
 

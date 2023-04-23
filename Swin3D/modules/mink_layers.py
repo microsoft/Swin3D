@@ -5,7 +5,7 @@ import MinkowskiEngine as ME
 import numpy as np 
 
 def assign_feats(sp, x):
-        return ME.SparseTensor(features=x, coordinate_map_key=sp.coordinate_map_key, coordinate_manager=sp.coordinate_manager)
+    return ME.SparseTensor(features=x.float(), coordinate_map_key=sp.coordinate_map_key, coordinate_manager=sp.coordinate_manager)
 
 class MinkConvBN(nn.Module):
     def __init__(self, in_channels, out_channels, kernel_size=3, stride=1, dilation=1, bias=False, dimension=3):
