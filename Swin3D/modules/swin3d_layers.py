@@ -14,6 +14,9 @@ import Swin3D.sparse_dl.knn
 from Swin3D.sparse_dl.knn import KNN
 
 def query_knn_feature(K, src_xyz, query_xyz, src_feat, src_offset, query_offset, return_idx=False):
+    """ 
+        gather feature in the KNN neighborhood
+    """
     assert src_xyz.is_contiguous() and query_xyz.is_contiguous() and src_feat.is_contiguous()
     if query_xyz is None:
         query_xyz = src_xyz
@@ -30,6 +33,9 @@ def query_knn_feature(K, src_xyz, query_xyz, src_feat, src_offset, query_offset,
         return grouped_feat
 
 def knn_linear_interpolation(src_xyz, query_xyz, src_feat, src_offset, query_offset, K=3):
+    """ 
+        interpolation feature using distance in KNN neighborhood
+    """
     N, C = query_xyz.shape[0], src_feat.shape[1]
     assert src_xyz.is_contiguous() and query_xyz.is_contiguous() and src_feat.is_contiguous()
     # (N, K)
@@ -177,8 +183,14 @@ def get_offset(batch):
     return offset
 
 class GridDownsample(nn.Module):
+    """
+        use stride to downsample voxel
+        use grid maxpooling with kernel_size
+    """
     def __init__(self, in_channels, out_channels, kernel_size=2, stride=2):
         super().__init__()
+        self.kernel_size = kernel_size
+        self.stride = stride
         self.in_channels = in_channels
         self.out_channels = out_channels
         self.sp_pool = ME.MinkowskiMaxPooling(kernel_size=kernel_size, stride=stride, dimension=3)
@@ -190,10 +202,17 @@ class GridDownsample(nn.Module):
         sp_down = self.sp_pool(self.linear(self.norm(sp)))
         coords_sp_down = self.coords_pool(coords_sp, sp_down)
         return sp_down, coords_sp_down
+    def extra_repr(self) -> str:
+        return f"kernel_size={self.kernel_size}, stride={self.stride}, in_channels={self.in_channels}, out_channels={self.out_channels}"
 
 class GridKNNDownsample(nn.Module):
+    """
+        use stride to downsample voxel
+        use KNN to do maxpooling
+    """
     def __init__(self, in_channels, out_channels, kernel_size=2, stride=2):
         super().__init__()
+        self.stride = stride
         self.in_channels = in_channels
         self.out_channels = out_channels
         self.k = 16
@@ -205,22 +224,32 @@ class GridKNNDownsample(nn.Module):
 
 
     def forward(self, sp, coords_sp):
+        # calculate the voxel 
         sp_down = self.sp_pool(sp)
+        # for downsampled cRSE
         coords_sp_down = self.coords_pool(coords_sp, sp_down)
         offset = get_offset(sp.C[:, 0])
         n_offset = get_offset(sp_down.C[:, 0])
 
         xyz = coords_sp.F[:, 1:4].detach().contiguous()
         n_xyz = coords_sp_down.F[:, 1:4].detach().contiguous()
-        feats = query_knn_feature(self.k, xyz, n_xyz, sp.F, offset, n_offset)  # (m, nsample, 3+c)
+        feats = query_knn_feature(self.k, xyz, n_xyz, sp.F, offset, n_offset)
         m, k, c = feats.shape
         feats = self.linear(self.norm(feats.view(m*k, c)).view(m, k, c)).transpose(1, 2).contiguous()
-        feats = self.pool(feats).squeeze(-1)  # (m, c)
+        feats = self.pool(feats).squeeze(-1)
         sp = assign_feats(sp_down, feats.float())
         coords_sp = coords_sp_down
         return sp, coords_sp
 
+    def extra_repr(self) -> str:
+        return f"kernel_size={self.k}, stride={self.stride}, in_channels={self.in_channels}, out_channels={self.out_channels}"
+
+
 class Upsample(nn.Module):
+    """
+        upsample using trilinear interpolation
+        follower by attn block according to self.attn
+    """
     def __init__(self, in_channels, out_channels, num_heads, window_size, quant_size, attn=True, up_k=3, cRSE='XYZ_RGB', fp16_mode=0):
         super().__init__()
         self.in_channels = in_channels
@@ -258,20 +287,28 @@ class Upsample(nn.Module):
             sp_up, _, _ = self.block(sp_up, coords_sp_up)
         return sp_up
     def extra_repr(self) -> str:
-        return f"up_k={self.up_k}, in_channels={self.in_channels}, out_channels={self.out_channels}"
+        return f"up_k={self.up_k}, in_channels={self.in_channels}, out_channels={self.out_channels}, attn={self.attn}"
 
 class WindowAttention(nn.Module):
-    """ Window based multi-head self attention (W-MSA) module with relative position bias.
+    """ 
+    Window based multi-head self attention (W-MSA) module with cRSE.
+    Designed for sparse structure
     It supports both of shifted and non-shifted window.
 
     Args:
         dim (int): Number of input channels.
         window_size (tuple[int]): The height and width of the window.
+        quant_size (int): quant_size for for finer cRSE table
         num_heads (int): Number of attention heads.
         qkv_bias (bool, optional):  If True, add a learnable bias to query, key, value. Default: True
         qk_scale (float | None, optional): Override default qk scale of head_dim ** -0.5 if set
         attn_drop (float, optional): Dropout ratio of attention weight. Default: 0.0
         proj_drop (float, optional): Dropout ratio of output. Default: 0.0
+        cRSE (str | 'XYZ', 'XYZ_RGB', 'XYZ_RGB_NORM'): cRSE mode. Default: 'XYZ_RGB'
+        fp16_mode (int | 0, 1, 2): fp16 mode for attention module, Default: 0
+            0: fp32 forward and fp32 backward
+            1: fp16 forward and fp32 backward
+            2: fp16 forward and fp16 backward
     """
 
     def __init__(self, dim, window_size, quant_size, num_heads, qkv_bias=True, qk_scale=None, attn_drop=0., proj_drop=0., cRSE='XYZ_RGB', fp16_mode=0):
@@ -393,10 +430,14 @@ class WindowAttention(nn.Module):
         value_table = torch.cat(value_table)
 
         if self.fp16_mode==0:
+            # do not use fp16
+            # cast q,k,v to fp32 in forward and backward
             fp16_mode = PrecisionMode.HALF_NONE
         elif self.fp16_mode==1:
+            # use fp16 only in forward
             fp16_mode = PrecisionMode.HALF_FORWARD
         elif self.fp16_mode==2:
+            # use fp16 both in forward and backward
             fp16_mode = PrecisionMode.HALF_ALL
 
         updated_values = SelfAttnAIOFunction.apply(query, key, value, query_table, key_table, value_table, table_offsets, indices, \
@@ -444,6 +485,7 @@ class BasicLayer(nn.Module):
         depth (int): Number of blocks.
         num_heads (int): Number of attention heads.
         window_size (int): Local window size.
+        quant_size (int): quant_size for for finer cRSE table
         mlp_ratio (float): Ratio of mlp hidden dim to embedding dim.
         qkv_bias (bool, optional): If True, add a learnable bias to query, key, value. Default: True
         qk_scale (float | None, optional): Override default qk scale of head_dim ** -0.5 if set.
@@ -466,6 +508,8 @@ class BasicLayer(nn.Module):
         self.dim = dim
         self.num_heads = num_heads
         self.quant_size = quant_size
+        self.cRSE = cRSE
+        self.fp16_mode = fp16_mode
 
 
         self.shift_size = window_size//2
@@ -487,6 +531,10 @@ class BasicLayer(nn.Module):
             self.downsample = None
 
     def get_map_pair(self, sp):
+        """
+        use minkowski pool to calculate windows
+        get the mapping from voxel to window
+        """ 
         window_size = [self.window_size]*3
         pool_sp =  self.pool(sp)
         windows = pool_sp.C
@@ -505,6 +553,14 @@ class BasicLayer(nn.Module):
         return map_pair, window_N
 
     def get_window_mapping(self, sp):
+        """
+        calculate the relationshape in the window:
+        w_w_id: non-empty idx inside the window(sorted by window)
+        w_w_xyz: xyz inside the window(sorted by window)
+        nempty_num: non-empty voxel number in each window
+        sort_idx: sort voxel according to window_id, to gather the point inside the same window
+        inv_sort_idx: inverse sort index
+        """ 
         map_pair, window_N = self.get_map_pair(sp)
         window_size = self.window_size
         nW = window_size ** 3
@@ -527,9 +583,13 @@ class BasicLayer(nn.Module):
         return w_w_id, w_w_xyz, nempty_num, sort_idx, inv_sort_idx
 
     def get_index01(self, sp, local_xyz, colors):
+        """
+        calculate the arguments for sparse attention
+        """
         w_w_id, w_w_xyz, nempty_num, n2n_indices, inv_sort_idx = self.get_window_mapping(sp)
         local_xyz = local_xyz[n2n_indices]
         colors = colors[n2n_indices]
+        # recover the relative pos in the voxel
         n_coords = w_w_xyz + local_xyz
         n_coords = torch.cat([n_coords, colors], dim=1)
         x_offset, y_offset, m2w_indices, w_sizes, w2n_indices, w2m_indices =\
@@ -538,6 +598,9 @@ class BasicLayer(nn.Module):
             w2m_indices, n_coords
 
     def get_shifted_sp(self, sp):
+        """
+        get the shifted sparse tensor for shift-window
+        """
         stride_in = sp.coordinate_map_key.get_tensor_stride()
         shift_size = self.shift_size * stride_in[0]
         shifted_C = sp.C.clone()
@@ -550,6 +613,11 @@ class BasicLayer(nn.Module):
         return (sp.C[:, 1:]/stride_in[0]) % self.window_size
 
     def forward(self, sp, coords_sp):
+        """
+        xyz: position of point inside voxel
+        colors: other signal for cRSE, include colors and normals
+        local_xyz: relative position of point indide voxel(using for finer cRSE table)
+        """
         colors = coords_sp.F[:, 4:]
         xyz = coords_sp.F[:, :4]
         local_xyz = (xyz - coords_sp.C)[:, 1:] / coords_sp.coordinate_map_key.get_tensor_stride()[0]
@@ -572,4 +640,5 @@ class BasicLayer(nn.Module):
             return sp, sp, coords_sp
 
     def extra_repr(self) -> str:
-        return f"window_size={self.window_size}, depth={self.depth}, channel={self.dim}, num_heads={self.num_heads}, quant_size={self.quant_size}"
+        return f"window_size={self.window_size}, depth={self.depth}, channel={self.dim}, num_heads={self.num_heads}, quant_size={self.quant_size}\
+            cRSE={self.cRSE}, fp16_mode={self.fp16_mode}"
