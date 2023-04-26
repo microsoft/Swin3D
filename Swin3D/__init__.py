@@ -1,3 +1,7 @@
+"""
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT License.
+"""
 from . import sparse_dl
 from . import modules
 from . import models
