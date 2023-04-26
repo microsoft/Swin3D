@@ -1,7 +1,3 @@
-/*
-Copyright (c) Microsoft Corporation.
-Licensed under the MIT License.
-*/
 #pragma once
 #pragma warning(disable : 4624)
 #pragma warning(disable : 4067)

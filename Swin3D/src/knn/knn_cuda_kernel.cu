@@ -1,7 +1,3 @@
-/*
-Copyright (c) Microsoft Corporation.
-Licensed under the MIT License.
-*/
 #include "cuda_utils.cuh"
 #include "knn_cuda_kernel.h"
 

@@ -640,5 +640,4 @@ class BasicLayer(nn.Module):
             return sp, sp, coords_sp
 
     def extra_repr(self) -> str:
-        return f"window_size={self.window_size}, depth={self.depth}, channel={self.dim}, num_heads={self.num_heads}, quant_size={self.quant_size}\
-            cRSE={self.cRSE}, fp16_mode={self.fp16_mode}"
+        return f"window_size={self.window_size}, depth={self.depth}, channel={self.dim}, num_heads={self.num_heads}, quant_size={self.quant_size}, cRSE={self.cRSE}, fp16_mode={self.fp16_mode}"

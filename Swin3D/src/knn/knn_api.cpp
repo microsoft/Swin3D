@@ -1,9 +1,4 @@
-/*
-Copyright (c) Microsoft Corporation.
-Licensed under the MIT License.
-*/
 #include <torch/extension.h>
-
 #include "knn_cuda_kernel.h"
 
 PYBIND11_MODULE(TORCH_EXTENSION_NAME, m) {
