@@ -110,10 +110,10 @@ class Swin3DUNet(nn.Module):
         self.init_weights()
 
     def forward(self, sp, coords_sp):
-        # sp: MinkowskiEngine SparseTensor
+        # sp: MinkowskiEngine SparseTensor for feature input
         # sp.F: input features,         NxC
         # sp.C: input coordinates,      Nx4
-        # coords_sp: MinkowskiEngine SparseTensor
+        # coords_sp: MinkowskiEngine SparseTensor for position and feature embedding
         # coords_sp.F: embedding
         #       Batch: 0,...0,1,...1,2,...2,...,B,...B
         #       XYZ:   in Voxel Scale
@@ -235,10 +235,10 @@ class Swin3DEncoder(nn.Module):
         self.init_weights()
 
     def forward(self, sp, coords_sp):
-        # sp: MinkowskiEngine SparseTensor
+        # sp: MinkowskiEngine SparseTensor for feature input
         # sp.F: input features,         NxC
         # sp.C: input coordinates,      Nx4
-        # coords_sp: MinkowskiEngine SparseTensor
+        # coords_sp: MinkowskiEngine SparseTensor for position and feature embedding
         # coords_sp.F: embedding
         #       Batch: 0,...0,1,...1,2,...2,...,B,...B
         #       XYZ:   in Voxel Scale

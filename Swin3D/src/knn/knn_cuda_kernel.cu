@@ -171,10 +171,9 @@ __global__ void knn_cuda_kernel(
     int batch_start = 0;
     int batch_end = query_N;
     int batch_idx = 0;
-    for (int i=0;i<batch_size;i++)
+    for (;batch_idx<batch_size;batch_idx++)
     {
-        if (global_idx<src_offset[i]) batch_idx = i;
-        else break;
+        if (global_idx<query_offset[batch_idx]) break;
     }
     if (batch_idx>0) batch_start = src_offset[batch_idx-1];
     else batch_start = 0;
