@@ -37,7 +37,7 @@ def load_state_with_same_shape(model, weights, skip_first_conv=False, verbose=Tr
 
 class Swin3DUNet(nn.Module):
     def __init__(self, depths, channels, num_heads, window_sizes, \
-            quant_sizes, drop_path_rate=0.2, up_k=3, \
+            quant_size, drop_path_rate=0.2, up_k=3, \
             num_layers=5, num_classes=13, stem_transformer=True, first_down_stride=2, upsample='linear', knn_down=True, \
             in_channels=6, cRSE='XYZ_RGB', fp16_mode=0):
         super().__init__()
@@ -82,7 +82,7 @@ class Swin3DUNet(nn.Module):
                 depth=depths[i], 
                 num_heads=num_heads[i], 
                 window_size=window_sizes[i],
-                quant_size=quant_sizes[i],
+                quant_size=quant_size,
                 drop_path=dpr[sum(depths[:i]):sum(depths[:i+1])], 
                 downsample=downsample if i < num_layers-1 else None,
                 down_stride=first_down_stride if i==0 else 2,
@@ -96,7 +96,7 @@ class Swin3DUNet(nn.Module):
             up_attn = False
         
         self.upsamples = nn.ModuleList([
-                Upsample(channels[i], channels[i-1], num_heads[i-1], window_sizes[i-1], quant_sizes[i-1], attn=up_attn, \
+                Upsample(channels[i], channels[i-1], num_heads[i-1], window_sizes[i-1], quant_size, attn=up_attn, \
                     up_k=up_k, cRSE=cRSE, fp16_mode=fp16_mode) 
             for i in range(num_layers-1, 0, -1)])
 
@@ -179,7 +179,7 @@ class Swin3DUNet(nn.Module):
                 print("=> no weight found at '{}'".format(ckpt))
 
 class Swin3DEncoder(nn.Module):
-    def __init__(self, depths, channels, num_heads, window_sizes, quant_sizes, \
+    def __init__(self, depths, channels, num_heads, window_sizes, quant_size, \
             drop_path_rate=0.2, num_layers=5, stem_transformer=True, first_down_stride=2, knn_down=True, \
             in_channels=6, cRSE='XYZ_RGB', fp16_mode=0):
         super().__init__()
@@ -224,7 +224,7 @@ class Swin3DEncoder(nn.Module):
                 depth=depths[i], 
                 num_heads=num_heads[i], 
                 window_size=window_sizes[i],
-                quant_size=quant_sizes[i],
+                quant_size=quant_size,
                 drop_path=dpr[sum(depths[:i]):sum(depths[:i+1])], 
                 downsample=downsample if i < num_layers-1 else None,
                 down_stride=first_down_stride if i==0 else 2,
