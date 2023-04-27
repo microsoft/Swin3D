@@ -1,0 +1,4 @@
+numpy
+torch
+timm==0.4.9
+MinkowskiEngine 
