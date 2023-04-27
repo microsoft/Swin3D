@@ -129,3 +129,10 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+
+# local vscode file
+.vscode
+
+# data file
+*.npy
+*.npz
