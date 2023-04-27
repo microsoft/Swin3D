@@ -86,19 +86,19 @@ To reproduce our results on downstream tasks, please follow the code in this [re
 
 ### ScanNet 3D Detection
 
-|                    | Pretrained | mAP@0.25 | mAP@0.50 |   Model   |   Log   |
-| :----------------- | :--------: | :------: | :------: | :-------: | :-----: |
-| Swin3D-S+FCAF3D    |  &check;   |   74.2   |   59.5   | [model]() | [log]() |
-| Swin3D-L+FCAF3D    |  &check;   |   74.2   |   58.6   | [model]() | [log]() |
-| Swin3D-S+CAGroup3D |  &check;   |   76.4   |   62.7   | [model]() | [log]() |
-| Swin3D-L+CAGroup3D |  &check;   |   76.4   |   63.2   | [model]() | [log]() |
+|                    | Pretrained | mAP@0.25 | mAP@0.50 | Model |  Log  |
+| :----------------- | :--------: | :------: | :------: | :---: | :---: |
+| Swin3D-S+FCAF3D    |  &check;   |   74.2   |   59.5   | model |  log  |
+| Swin3D-L+FCAF3D    |  &check;   |   74.2   |   58.6   | model |  log  |
+| Swin3D-S+CAGroup3D |  &check;   |   76.4   |   62.7   | model |  log  |
+| Swin3D-L+CAGroup3D |  &check;   |   76.4   |   63.2   | model |  log  |
 
 ### S3DIS 3D Detection
 
-|                 | Pretrained | mAP@0.25 | mAP@0.50 |   Model   |   Log   |
-| :-------------- | :--------: | :------: | :------: | :-------: | :-----: |
-| Swin3D-S+FCAF3D |  &check;   |   69.9   |   50.2   | [model]() | [log]() |
-| Swin3D-L+FCAF3D |  &check;   |   72.1   |   54.0   | [model]() | [log]() |
+|                 | Pretrained | mAP@0.25 | mAP@0.50 | Model |  Log  |
+| :-------------- | :--------: | :------: | :------: | :---: | :---: |
+| Swin3D-S+FCAF3D |  &check;   |   69.9   |   50.2   | model |  log  |
+| Swin3D-L+FCAF3D |  &check;   |   72.1   |   54.0   | model |  log  |
 
 ## Citation
 
