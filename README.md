@@ -39,10 +39,10 @@ The models pretrained on Structured3D with different cRSE are provided here.
 
 |          |   Pretrain   | #params | cRSE         | mIoU(val) |   Model   |   Log   |
 | :------- | :----------: | :------ | :----------- | :-------: | :-------: | :-----: |
-| Swin3D-S | Structured3D | 23.57M  | XYZ,RGB      |   77.69   | [model]() | [log]() |
-| Swin3D-S | Structured3D | 23.57M  | XYZ,RGB,NORM |   79.15   | [model]() | [log]() |
-| Swin3D-L | Structured3D | 60.75M  | XYZ,RGB      |   79.79   | [model]() | [log]() |
-| Swin3D-L | Structured3D | 60.75M  | XYZ,RGB,NORM |   81.04   | [model]() | [log]() |
+| Swin3D-S | Structured3D | 23.57M  | XYZ,RGB      |   77.69   | [model](https://drive.google.com/file/d/1dpvHzqWTBxaxMuxVQo6Xe7smzp3v0cf_/view?usp=share_link) | [log](https://drive.google.com/file/d/10WtFv3KeoHVfFL8NqrYxBu8Ccz7CpotT/view?usp=share_link) |
+| Swin3D-S | Structured3D | 23.57M  | XYZ,RGB,NORM |   79.15   | [model](https://drive.google.com/file/d/1nI30ZxYDZO3l6jhYlfGg_FBIIq-VIOT1/view?usp=share_link) | [log](https://drive.google.com/file/d/13E7wN1hqCiStMkn8UuzhsOka8Fx-UQGl/view?usp=share_link) |
+| Swin3D-L | Structured3D | 60.75M  | XYZ,RGB      |   79.79   | [model](https://drive.google.com/file/d/1WxWRyt6uKZ8ubVYc6QYoebDMJRyXQRM8/view?usp=share_link) | [log](https://drive.google.com/file/d/10vu6lD6rThxRCNd6OtuiSK5HMJVXgmtB/view?usp=share_link) |
+| Swin3D-L | Structured3D | 60.75M  | XYZ,RGB,NORM |   81.04   | [model](https://drive.google.com/file/d/17IRs5s-pBE7FAgyVnCkVivgYXosLTG5C/view?usp=share_link) | [log](https://drive.google.com/file/d/1x-s8ajGTSdk7n7cW4IRl1Fz9mdNHxID_/view?usp=sharing) |
 
 ## Quick Start
 
