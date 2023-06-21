@@ -469,8 +469,6 @@ class WindowAttention(nn.Module):
         self.table_offsets = table_offsets
 
         self.quant_size = quant_size
-        self.quant_grid_length_xyz = quant_grid_length_xyz
-        self.quant_grid_length_rgb = quant_grid_length_rgb
 
         self.qkv = nn.Linear(dim, dim * 3, bias=qkv_bias)
         self.attn_drop = nn.Dropout(attn_drop, inplace=True)
