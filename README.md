@@ -13,7 +13,7 @@
 Initial commits:
 
 1. Pretrained models on Structured3D are provided.
-2. The supported code and models for Semantic Segmentation on ScanNet and S3DIS are provided.
+2. The supported code for Semantic Segmentation on ScanNet and S3DIS are provided.
 
 ## Introduction
 
@@ -37,12 +37,12 @@ We pretrained our Swin3D on Structured3D, please refer to this [link](https://gi
 
 The models pretrained on Structured3D with different cRSE are provided here.
 
-|          |   Pretrain   | #params | cRSE         | mIoU(val) |   Model   |   Log   |
-| :------- | :----------: | :------ | :----------- | :-------: | :-------: | :-----: |
-| Swin3D-S | Structured3D | 23.57M  | XYZ,RGB      |   77.69   | [model]() | [log]() |
-| Swin3D-S | Structured3D | 23.57M  | XYZ,RGB,NORM |   79.15   | [model]() | [log]() |
-| Swin3D-L | Structured3D | 60.75M  | XYZ,RGB      |   79.79   | [model]() | [log]() |
-| Swin3D-L | Structured3D | 60.75M  | XYZ,RGB,NORM |   81.04   | [model]() | [log]() |
+|          |   Pretrain   | #params | cRSE         | mIoU(val) |                                            Model                                            |                                            Log                                            |
+| :------- | :----------: | :------ | :----------- | :-------: | :-----------------------------------------------------------------------------------------: | :---------------------------------------------------------------------------------------: |
+| Swin3D-S | Structured3D | 23.57M  | XYZ,RGB      |   77.69   | [model](https://drive.google.com/file/d/1oezNkN3_HZvyxGxjtOpSaQUbGl3YYF90/view?usp=sharing) | [log](https://drive.google.com/file/d/1TuwZqpKm8OYj8BeMhDUhLcGqzXhgJcpC/view?usp=sharing) |
+| Swin3D-S | Structured3D | 23.57M  | XYZ,RGB,NORM |   79.15   | [model](https://drive.google.com/file/d/1FMmAgHwS__NtFldH-lFTsraKj0my62t4/view?usp=sharing) | [log](https://drive.google.com/file/d/1-0kz81X0j2Zp-mntN1GwQlsm5sLIy3JX/view?usp=sharing) |
+| Swin3D-L | Structured3D | 60.75M  | XYZ,RGB      |   79.79   | [model](https://drive.google.com/file/d/1ior8uAQRiVd2mwfYapcaF_e_R80y7DQm/view?usp=sharing) | [log](https://drive.google.com/file/d/1YYd8SOaAIqz16T7XOL54aGPC4sSoMXsW/view?usp=sharing) |
+| Swin3D-L | Structured3D | 60.75M  | XYZ,RGB,NORM |   81.04   | [model](https://drive.google.com/file/d/1ySNrP39H6m-euK-2La60-MNOp0e3Pe_4/view?usp=sharing) | [log](https://drive.google.com/file/d/1nXQCw5G2swrSksBnpGBveNSHwAqy8hAZ/view?usp=sharing) |
 
 ## Quick Start
 
@@ -61,44 +61,44 @@ Build models and load our pretrained weight, Then you can finetune your model in
             num_layers=num_layers, stem_transformer=stem_transformer, \
             upsample=upsample, first_down_stride=down_stride, \
             knn_down=knn_down, in_channels=in_channels, \
-            cRSE='XYZ_RGB_NORM', fp16_mode=2)
+            cRSE='XYZ_RGB_NORM', fp16_mode=1)
     model.load_pretrained_model(ckpt_path)
 
 ## Results and models
 
-To reproduce our results on downstream tasks, please follow the code in this [repo](https://github.com/Yukichiii/Swin3D_Task). The results and models are provided here.
+To reproduce our results on downstream tasks, please follow the code in this [repo](https://github.com/Yukichiii/Swin3D_Task). The results are provided here.
 
 ### ScanNet Segmentation
 
-|          | Pretrained | mIoU(Val) | mIoU(Test) |   Model   |   Log   |
-| :------- | :--------: | :-------: | :--------: | :-------: | :-----: |
-| Swin3D-S |  &cross;   |   75.2    |     -      | [model]() | [log]() |
-| Swin3D-S |  &check;   |   75.7    |     -      | [model]() | [log]() |
-| Swin3D-L |  &check;   |   77.5    |    77.9    | [model]() | [log]() |
+|          | Pretrained | mIoU(Val)  | mIoU(Test) |
+| :------- | :--------: | :--------: | :--------: |
+| Swin3D-S |  &cross;   |    75.2    |     -      |
+| Swin3D-S |  &check;   | 75.6(76.8) |     -      |
+| Swin3D-L |  &check;   | 76.2(77.5) |    77.9    |
 
 ### S3DIS Segmentation
 
-|          | Pretrained | Area 5 mIoU | 6-fold mIoU |   Model   |   Log   |
-| :------- | :--------: | :---------: | :---------: | :-------: | :-----: |
-| Swin3D-S |  &cross;   |    72.5     |    76.9     | [model]() | [log]() |
-| Swin3D-S |  &check;   |    73.0     |    78.2     | [model]() | [log]() |
-| Swin3D-L |  &check;   |    74.5     |    79.8     | [model]() | [log]() |
+|          | Pretrained | Area 5 mIoU | 6-fold mIoU |
+| :------- | :--------: | :---------: | :---------: |
+| Swin3D-S |  &cross;   |    72.5     |    76.9     |
+| Swin3D-S |  &check;   |    73.0     |    78.2     |
+| Swin3D-L |  &check;   |    74.5     |    79.8     |
 
 ### ScanNet 3D Detection
 
-|                    | Pretrained | mAP@0.25 | mAP@0.50 | Model |  Log  |
-| :----------------- | :--------: | :------: | :------: | :---: | :---: |
-| Swin3D-S+FCAF3D    |  &check;   |   74.2   |   59.5   | model |  log  |
-| Swin3D-L+FCAF3D    |  &check;   |   74.2   |   58.6   | model |  log  |
-| Swin3D-S+CAGroup3D |  &check;   |   76.4   |   62.7   | model |  log  |
-| Swin3D-L+CAGroup3D |  &check;   |   76.4   |   63.2   | model |  log  |
+|                    | Pretrained | mAP@0.25 | mAP@0.50 |
+| :----------------- | :--------: | :------: | :------: |
+| Swin3D-S+FCAF3D    |  &check;   |   74.2   |   59.5   |
+| Swin3D-L+FCAF3D    |  &check;   |   74.2   |   58.6   |
+| Swin3D-S+CAGroup3D |  &check;   |   76.4   |   62.7   |
+| Swin3D-L+CAGroup3D |  &check;   |   76.4   |   63.2   |
 
 ### S3DIS 3D Detection
 
-|                 | Pretrained | mAP@0.25 | mAP@0.50 | Model |  Log  |
-| :-------------- | :--------: | :------: | :------: | :---: | :---: |
-| Swin3D-S+FCAF3D |  &check;   |   69.9   |   50.2   | model |  log  |
-| Swin3D-L+FCAF3D |  &check;   |   72.1   |   54.0   | model |  log  |
+|                 | Pretrained | mAP@0.25 | mAP@0.50 |
+| :-------------- | :--------: | :------: | :------: |
+| Swin3D-S+FCAF3D |  &check;   |   69.9   |   50.2   |
+| Swin3D-L+FCAF3D |  &check;   |   72.1   |   54.0   |
 
 ## Citation
 
